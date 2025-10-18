@@ -63,9 +63,11 @@
       const lines = text.split('\n');
       const seen = new Set();
       return lines.filter(line => {
-        const trimmed = line.trim();
-        if (seen.has(trimmed)) return false;
-        seen.add(trimmed);
+        // vollständige Leerzeilen und Zeilen, die nur aus Whitespace bestehen, behalten
+        if (line.trim() === '') return true;
+        const normalized = line.trim();
+        if (seen.has(normalized)) return false;
+        seen.add(normalized);
         return true;
       }).join('\n');
     }
@@ -77,10 +79,11 @@
         text = text
           .replace(/<[^>]*>/g, '') // HTML-Tags entfernen
           .replace(/[*_~`]/g, '') // Markdown-Symbole entfernen
-          .replace(/[ \t]+/g, ' ') // Doppelte Leerzeichen/Tabs
-          .replace(/\n{3,}/g, '\n\n') // Mehr als 2 Leerzeilen reduzieren
-          .replace(/[\u200B-\u200D\uFEFF]/g, '') // Unsichtbare Zeichen
-          .trim();
+          .replace(/[ \t]+/g, ' ') // mehrere Leerzeichen/Tabs innerhalb einer Zeile auf ein Leerzeichen reduzieren
+          .replace(/[\u200B-\u200D\uFEFF]/g, ''); // Unsichtbare Zeichen entfernen
+
+        // Zeilenend-Whitespace entfernen, aber komplette Leerzeilen/Absätze erhalten
+        text = text.split('\n').map(line => line.replace(/[ \t]+$/,'')).join('\n');
 
         text = removeDuplicateLines(text);
         text = capitalizeSentences(text);
