@@ -47,12 +47,28 @@
 
   <script>
     function capitalizeAfterArticles(text) {
-      const articlePattern = /\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([a-zäöüß])/gi;
-      return text.replace(articlePattern, (_, article, firstLetter) => {
-        return `${article} ${firstLetter.toUpperCase()}`;
-      }).replace(/\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([A-ZÄÖÜ])([a-zäöüß]+)/g, (_, a, f, rest) => {
+      // Erster Teil: falls direkt nach Artikel ein kleingeschriebenes Wort folgt,
+      // prüfen wir, ob danach ein großgeschriebenes Wort kommt (eingeschobenes Wort).
+      // Wenn ja → das kleingeschriebene Wort nicht groß machen.
+      const articlePattern = /\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([a-zäöüß][a-zäöüß-]*)/gi;
+      text = text.replace(articlePattern, (match, article, firstWord, offset, str) => {
+        const rest = str.slice(offset + match.length);
+        // schaut, ob unmittelbar danach ein großgeschriebenes Wort folgt
+        if (/^\s+[A-ZÄÖÜ]/.test(rest)) {
+          // Eingeschobenes Wort erkannt: belasse erstes Wort kleingeschrieben
+          return `${article} ${firstWord}`;
+        }
+        // Sonst → erstes Wort nach Artikel großschreiben
+        return `${article} ${firstWord.charAt(0).toUpperCase() + firstWord.slice(1)}`;
+      });
+
+      // Zweiter Teil: Falls bereits ein großgeschriebenes Wort nach Artikel vorhanden ist,
+      // stelle sicher, dass Rest der Wortgruppe korrekt bleibt.
+      text = text.replace(/\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([A-ZÄÖÜ])([a-zäöüß]+)/g, (_, a, f, rest) => {
         return `${a} ${f}${rest}`;
       });
+
+      return text;
     }
 
     function capitalizeSentences(text) {
