@@ -38,15 +38,26 @@
       color: #666;
       text-align: center;
     }
+    #hiddenInput {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      width: 0;
+    }
   </style>
 </head>
 <body>
   <h1>Text Cleaner</h1>
+  <input id="hiddenInput" type="text" autocomplete="off" />
   <button onclick="cleanClipboard()">Bereinigen & Kopieren</button>
   <div class="info" id="status"></div>
 
   <script>
     async function cleanClipboard() {
+      const hiddenInput = document.getElementById("hiddenInput");
+      hiddenInput.focus();
+
       try {
         const text = await navigator.clipboard.readText();
         const cleaned = text
@@ -61,6 +72,11 @@
         document.getElementById("status").textContent = "Fehler beim Zugriff auf die Zwischenablage.";
       }
     }
+
+    // Fokus beim Laden setzen (hilft auf iOS)
+    window.addEventListener("load", () => {
+      document.getElementById("hiddenInput").focus();
+    });
   </script>
 </body>
 </html>
