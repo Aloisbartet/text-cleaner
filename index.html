@@ -11,24 +11,17 @@
       padding: 2em;
       background: #f5f5f5;
       color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
     h1 {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    textarea {
-      width: 100%;
-      height: 200px;
-      padding: 1em;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      resize: vertical;
+      margin-bottom: 2em;
     }
     button {
-      margin-top: 1em;
-      padding: 1em;
-      width: 100%;
+      padding: 1em 2em;
       font-size: 1em;
       background-color: #007aff;
       color: white;
@@ -40,31 +33,33 @@
       background-color: #005bb5;
     }
     .info {
-      margin-top: 1em;
-      text-align: center;
+      margin-top: 1.5em;
       font-size: 0.9em;
       color: #666;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <h1>Text Cleaner</h1>
-  <textarea id="input" placeholder="Füge hier deinen Text ein..."></textarea>
-  <button onclick="cleanText()">Bereinigen & Kopieren</button>
+  <button onclick="cleanClipboard()">Bereinigen & Kopieren</button>
   <div class="info" id="status"></div>
 
   <script>
-    function cleanText() {
-      let text = document.getElementById("input").value;
-      let cleaned = text
-        .replace(/<[^>]*>/g, '')
-        .replace(/[*_~`]/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .trim();
-      navigator.clipboard.writeText(cleaned).then(() => {
+    async function cleanClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const cleaned = text
+          .replace(/<[^>]*>/g, '')
+          .replace(/[*_~`]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/[\u200B-\u200D\uFEFF]/g, '')
+          .trim();
+        await navigator.clipboard.writeText(cleaned);
         document.getElementById("status").textContent = "Bereinigter Text wurde kopiert!";
-      });
+      } catch (err) {
+        document.getElementById("status").textContent = "Fehler beim Zugriff auf die Zwischenablage.";
+      }
     }
   </script>
 </body>
