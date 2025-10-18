@@ -46,16 +46,47 @@
   <div class="info" id="status"></div>
 
   <script>
+    function capitalizeAfterArticles(text) {
+      const articlePattern = /\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([a-zäöüß])/gi;
+      return text.replace(articlePattern, (_, article, firstLetter) => {
+        return `${article} ${firstLetter.toUpperCase()}`;
+      }).replace(/\b(der|die|das|ein|eine|einen|einem|einer|dem|den|des)\s+([A-ZÄÖÜ])([a-zäöüß]+)/g, (_, a, f, rest) => {
+        return `${a} ${f}${rest}`;
+      });
+    }
+
+    function capitalizeSentences(text) {
+      return text.replace(/(^\s*\w|[.!?]\s*\w)/g, match => match.toUpperCase());
+    }
+
+    function removeDuplicateLines(text) {
+      const lines = text.split('\n');
+      const seen = new Set();
+      return lines.filter(line => {
+        const trimmed = line.trim();
+        if (seen.has(trimmed)) return false;
+        seen.add(trimmed);
+        return true;
+      }).join('\n');
+    }
+
     async function cleanClipboard() {
       try {
-        const text = await navigator.clipboard.readText();
-        const cleaned = text
-          .replace(/<[^>]*>/g, '')
-          .replace(/[*_~`]/g, '')
-          .replace(/\s+/g, ' ')
-          .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        let text = await navigator.clipboard.readText();
+
+        text = text
+          .replace(/<[^>]*>/g, '') // HTML-Tags entfernen
+          .replace(/[*_~`]/g, '') // Markdown-Symbole entfernen
+          .replace(/[ \t]+/g, ' ') // Doppelte Leerzeichen/Tabs
+          .replace(/\n{3,}/g, '\n\n') // Mehr als 2 Leerzeilen reduzieren
+          .replace(/[\u200B-\u200D\uFEFF]/g, '') // Unsichtbare Zeichen
           .trim();
-        await navigator.clipboard.writeText(cleaned);
+
+        text = removeDuplicateLines(text);
+        text = capitalizeSentences(text);
+        text = capitalizeAfterArticles(text);
+
+        await navigator.clipboard.writeText(text);
         document.getElementById("status").textContent = "Bereinigter Text wurde kopiert!";
       } catch (err) {
         document.getElementById("status").textContent = "Fehler beim Zugriff auf die Zwischenablage.";
